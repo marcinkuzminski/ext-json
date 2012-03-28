@@ -2,6 +2,8 @@ import datetime
 import functools
 import decimal
 
+__all__ = ['json', 'simplejson', 'stdjson']
+
 
 def _is_aware(value):
     """
@@ -54,9 +56,11 @@ def _obj_dump(obj):
     else:
         raise NotImplementedError
 
+
+# Import simplejson
 try:
     # import simplejson initially
-    import simplejson as json
+    import simplejson as _sj
 
     def extended_encode(obj):
         try:
@@ -64,21 +68,37 @@ try:
         except NotImplementedError:
             pass
         raise TypeError("%r is not JSON serializable" % (obj,))
-    json.dumps = functools.partial(json.dumps, default=extended_encode)
-    json.dump = functools.partial(json.dump, default=extended_encode)
+    # we handle decimals our own it makes unified behavior of json vs 
+    # simplejson
+    _sj.dumps = functools.partial(_sj.dumps, default=extended_encode,
+                                  use_decimal=False)
+    _sj.dump = functools.partial(_sj.dump, default=extended_encode,
+                                 use_decimal=False)
+    simplejson = _sj
 
 except ImportError:
-    # simplejson not found try out regular json module
-    import json
+    # no simplejson set it to None
+    _sj = None
 
-    # extended JSON encoder for json
-    class ExtendedEncoder(json.JSONEncoder):
-        def default(self, obj):
-            try:
-                return _obj_dump(obj)
-            except NotImplementedError:
-                pass
-            return json.JSONEncoder.default(self, obj)
-    # monkey-patch JSON encoder to use extended version
-    json.dumps = functools.partial(json.dumps, cls=ExtendedEncoder)
-    json.dump = functools.partial(json.dump, cls=ExtendedEncoder)
+
+# simplejson not found try out regular json module
+import json as _json
+
+
+# extended JSON encoder for json
+class ExtendedEncoder(_json.JSONEncoder):
+    def default(self, obj):
+        try:
+            return _obj_dump(obj)
+        except NotImplementedError:
+            pass
+        return _json.JSONEncoder.default(self, obj)
+# monkey-patch JSON encoder to use extended version
+_json.dumps = functools.partial(_json.dumps, cls=ExtendedEncoder)
+_json.dump = functools.partial(_json.dump, cls=ExtendedEncoder)
+stdlib = _json
+
+# set all available json modules
+simplejson = _sj
+stdjson = _json
+json = _sj if _sj else _json

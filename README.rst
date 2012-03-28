@@ -41,9 +41,19 @@ Supports the following objects and types by default:
 +-----------------------------+-----------------------------+
 
 
+In addition if object have **__json__** attribute or method encoder will use 
+that for serialization 
+
+
 usage::
 
  from ext_json import json
  
 imported json have already extended encoder as default so no special calls
 are needed to execute `json.dump` or `json.dumps`
+
+if you prefer to import specific encoder you can do::
+ 
+ from ext_json import simplejson # for simplejson <-- can be None
+ from ext_json import stdjson # for json from stdlib
+ 
