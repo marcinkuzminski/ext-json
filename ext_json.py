@@ -55,6 +55,20 @@ def _obj_dump(obj):
         raise NotImplementedError
 
 try:
+    # import simplejson initially
+    import simplejson as json
+
+    def extended_encode(obj):
+        try:
+            return _obj_dump(obj)
+        except NotImplementedError:
+            pass
+        raise TypeError("%r is not JSON serializable" % (obj,))
+    json.dumps = functools.partial(json.dumps, default=extended_encode)
+    json.dump = functools.partial(json.dump, default=extended_encode)
+
+except ImportError:
+    # simplejson not found try out regular json module
     import json
 
     # extended JSON encoder for json
@@ -68,15 +82,3 @@ try:
     # monkey-patch JSON encoder to use extended version
     json.dumps = functools.partial(json.dumps, cls=ExtendedEncoder)
     json.dump = functools.partial(json.dump, cls=ExtendedEncoder)
-
-except ImportError:
-    import simplejson as json
-
-    def extended_encode(obj):
-        try:
-            return _obj_dump(obj)
-        except NotImplementedError:
-            pass
-        raise TypeError("%r is not JSON serializable" % (obj,))
-    json.dumps = functools.partial(json.dumps, default=extended_encode)
-    json.dump = functools.partial(json.dump, default=extended_encode)

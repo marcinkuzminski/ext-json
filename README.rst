@@ -3,8 +3,9 @@ EXTENDED JSON
 
 
 Simple extended version of JSON encoder for handling serialization of few
-other than standard python data types. It works on python json module, and 
-fallbacks to simplejson if available
+other than standard python data types. It tries to use simplejson lib if found
+then fallback to stdlib json module. Raises an exception if no json module
+can be loaded.
 
 
 Supports the following objects and types by default:
