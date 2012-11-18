@@ -55,5 +55,5 @@ are needed to execute `json.dump` or `json.dumps`
 if you prefer to import specific encoder you can do::
  
  from ext_json import simplejson # for simplejson <-- can be None
- from ext_json import stdjson # for json from stdlib
+ from ext_json import stdlibjson # for json from stdlib
  
