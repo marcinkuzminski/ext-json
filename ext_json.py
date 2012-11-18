@@ -109,15 +109,14 @@ try:
     _json.dumps = functools.partial(_json.dumps, cls=ExtendedEncoder)
     _json.dump = functools.partial(_json.dump, cls=ExtendedEncoder)
 
+    stdlibjson = _json
 except ImportError:
-    json = None
-
-stdlibjson = _json
+    stdlibjson = None
 
 # set all available json modules
-if _sj:
+if simplejson:
     json = _sj
-elif json:
+elif stdlibjson:
     json = _json
 else:
     raise ImportError('Could not find any json modules')
