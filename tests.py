@@ -75,8 +75,8 @@ def _make_dump_test(name, orgval, jsonval):
 class TestJSONEncoder(unittest.TestCase):
 
     def setUp(self):
-        from ext_json import stdjson
-        self.json = stdjson
+        from ext_json import stdlibjson
+        self.json = stdlibjson
 
 
 class TestSIMPLEJSONEncoder(unittest.TestCase):
@@ -84,6 +84,50 @@ class TestSIMPLEJSONEncoder(unittest.TestCase):
     def setUp(self):
         from ext_json import simplejson
         self.json = simplejson
+
+
+class Promise(object):
+    def __init__(self, title):
+        self.title = title
+
+    def __repr__(self):
+        return 'ImPromise'
+
+
+class TestOverrideEncoder(unittest.TestCase):
+
+    def test_override_json(self):
+        import simplejson
+
+        class LazyEncoder(simplejson.JSONEncoder):
+            """Encodes django's lazy i18n strings.
+            """
+            def default(self, obj):
+                if isinstance(obj, Promise):
+                    return unicode(obj)
+                return obj
+
+        result = simplejson.dumps({
+            "html": '<span></span>',
+            "message": Promise(u"Data has been saved."),
+        }, cls=LazyEncoder)
+
+        assert result == '{"message": "ImPromise", "html": "<span></span>"}'
+
+    def test_override_simplejson(self):
+        import json
+
+        def default_enc(obj):
+            if isinstance(obj, Promise):
+                return unicode(obj)
+            return obj
+
+        result = json.dumps({
+            "html": '<span></span>',
+            "message": Promise(u"Data has been saved."),
+        }, default=default_enc)
+
+        assert result == '{"message": "ImPromise", "html": "<span></span>"}'
 
 for name, orgval, jsonval in test_cases:
     setattr(TestJSONEncoder, "test_JSON_%s" % name,
